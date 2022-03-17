@@ -1,4 +1,5 @@
 # Import Splinter, BeautifulSoup, and Pandas
+from matplotlib.pyplot import title
 from splinter import Browser
 from bs4 import BeautifulSoup as soup
 import pandas as pd
@@ -19,6 +20,7 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemispheres": hemispheres(browser),
         "last_modified": dt.datetime.now()
     }
 
@@ -96,6 +98,54 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+def hemispheres(browser):
+     # Visit URL
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+
+    #create url list
+
+    url_list = []
+
+    links = browser.find_by_css('a.product-item img')
+
+    for i in range(len(links)):
+
+        # for loop to gather urls
+
+        hemispheres = {}
+        
+        browser.find_by_css('a.product-item img')[i].click()
+        
+        # On new page, proceed with opening up full image
+        full_image_elem = browser.links.find_by_text('Sample').first
+        hemispheres['img_url']= full_image_elem['href'] 
+        
+        hemispheres['title'] = browser.find_by_css('h2.title').text
+        
+        url_list.append(hemispheres)
+        
+        browser.back()
+        
+    return url_list
+
+
+def scrape_hemisphere(html_text):
+    hemi_soup = soup(html_text, "html.parser")
+
+    try:
+        title_elem = hemi_soup.find("h2", class_ = "title").get_text()
+        sample_elem = hemi_soup.find("a", text = "Sample").get("href")
+
+
+    except AttributeError:
+        return None
+
+    hemispheres = {"title": title_elem, "img_url": sample_elem}
+
+    return hemispheres
+
 
 if __name__ == "__main__":
 
